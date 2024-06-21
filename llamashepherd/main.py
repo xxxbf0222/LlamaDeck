@@ -189,7 +189,7 @@ def initialize_action(default_llama_shepherd_path):
             if download_tokenizer == "y":
                 # Add logic to download and configure the Tokenizer model
                 download_and_configure_model(
-                    "Tokenizer",
+                    "tokenizer",
                     model_config.urls["tokenizer"],
                     default_llama_shepherd_path,
                 )
@@ -201,17 +201,17 @@ def initialize_action(default_llama_shepherd_path):
             if download_stories == "y":
                 # Add logic to download and configure stories models
                 download_and_configure_model(
-                    "Stories15M",
+                    "stories15M",
                     model_config.urls["stories15M"],
                     default_llama_shepherd_path,
                 )
                 download_and_configure_model(
-                    "Stories42M",
+                    "stories42M",
                     model_config.urls["stories42M"],
                     default_llama_shepherd_path,
                 )
                 download_and_configure_model(
-                    "Stories110M",
+                    "stories110M",
                     model_config.urls["stories110M"],
                     default_llama_shepherd_path,
                 )
