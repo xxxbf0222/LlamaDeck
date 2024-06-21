@@ -140,7 +140,7 @@ def interactive_action(default_llama_shepherd_path):
         selected_category = get_language_for_option(llamas, selected_option)
 
         default_path = os.path.join(
-            default_llama_shepherd_path, selected_category, selected_option["name"]
+            default_llama_shepherd_path, "implements", selected_category, selected_option["name"]
         )
         destination = (
             input(
@@ -168,13 +168,15 @@ def interactive_action(default_llama_shepherd_path):
                 print("Invalid input. Please enter 'y', 'n', or '0.'")
 
 
-def initialize_action(default_llama_shepherd_path):
+def initialize_action(default_resources_path):
     """Initialize llama models based on user input.
 
     Args:
         default_llama_shepherd_path (str): Default path for llama shepherd.
     """
     print("Initializing models...")
+
+    default_model_path = os.path.join(default_resources_path,"models")
 
     while True:
         user_input = input(
@@ -191,7 +193,7 @@ def initialize_action(default_llama_shepherd_path):
                 download_and_configure_model(
                     "tokenizer",
                     model_config.urls["tokenizer"],
-                    default_llama_shepherd_path,
+                    default_model_path
                 )
 
             # Ask whether to download stories models
@@ -203,17 +205,17 @@ def initialize_action(default_llama_shepherd_path):
                 download_and_configure_model(
                     "stories15M",
                     model_config.urls["stories15M"],
-                    default_llama_shepherd_path,
+                    default_model_path,
                 )
                 download_and_configure_model(
                     "stories42M",
                     model_config.urls["stories42M"],
-                    default_llama_shepherd_path,
+                    default_model_path,
                 )
                 download_and_configure_model(
                     "stories110M",
                     model_config.urls["stories110M"],
-                    default_llama_shepherd_path,
+                    default_model_path,
                 )
 
             break
@@ -223,7 +225,7 @@ def initialize_action(default_llama_shepherd_path):
             print("Invalid input. Please enter 'y', 'n', or '0'.")
 
 
-def download_and_configure_model(model_name, model_url, destination_directory):
+def download_and_configure_model(model_name, model_url, models_directory):
     """Download and configure a llama model.
 
     Args:
@@ -234,7 +236,6 @@ def download_and_configure_model(model_name, model_url, destination_directory):
     print(f"Downloading and configuring {model_name} model from: {model_url}")
 
     # Ensure the models directory exists
-    models_directory = os.path.join(destination_directory, "models")
     os.makedirs(models_directory, exist_ok=True)
 
     # Specify the destination file path
@@ -253,8 +254,7 @@ def download_and_configure_model(model_name, model_url, destination_directory):
 
 def main():
     """Main function to handle llama shepherd CLI operations."""
-    home_directory = os.path.expanduser("~")
-    default_llama_shepherd_path = os.path.join(home_directory, "llama-shepherd")
+    default_resources_path = os.path.join(os.getcwd(), "resources")
 
     parser = argparse.ArgumentParser(
         description="Llama Shepherd CLI: Manage your llama-related projects.",
@@ -280,9 +280,9 @@ def main():
     if args.action == "list":
         list_action(args.language)  # Pass the language argument
     elif args.action == "install":
-        interactive_action(default_llama_shepherd_path)
+        interactive_action(default_resources_path)
     elif args.action == "models":
-        initialize_action(default_llama_shepherd_path)
+        initialize_action(default_resources_path)
     elif args.action == "--help":
         parser.print_help()
 
