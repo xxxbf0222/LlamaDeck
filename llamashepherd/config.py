@@ -2,6 +2,11 @@
 
 repo_options = [
 
+{'language': 'C', 'name': 'llama2.c', 'url': 'https://github.com/karpathy/llama2.c', 'author': '@karpathy'} ,
+# Add other C implementations here.
+
+
+
 {'language': 'Rust', 'name': 'llama2.rs', 'url': 'https://github.com/gaxler/llama2.rs', 'author': '@gaxler'} ,
 
 {'language': 'Rust', 'name': 'llama2.rs', 'url': 'https://github.com/leo-du/llama2.rs', 'author': '@leo-du'} ,
@@ -151,6 +156,8 @@ model_options = [
     {'Model': 'stories110M', 'url': 'https://huggingface.co/karpathy/tinyllamas/resolve/main/stories110M.bin'},
 
     {'Model': 'tokenizer', 'url': 'https://github.com/karpathy/llama2.c/raw/master/tokenizer.bin'},
+
+    {'Model': 'Meta-Llama', 'url':'https://llama.meta.com/llama-downloads/'}
 ]
 
 
