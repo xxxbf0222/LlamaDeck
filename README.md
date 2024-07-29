@@ -1,6 +1,64 @@
 # llama2-shepherd 
 
-**Llama Shepherd** is a command-line tool for quickly managing and experimenting with multiple versions of llama inference implementations. Originating from [llama2.c project](https://github.com/karpathy/llama2.c) by Andrej Karpathy.
+**Llama Shepherd** is a command-line tool for quickly managing and experimenting with multiple versions of llama inference implementations. It can help you quickly filter and download [different llama implementations](#repository-list) and [llama2-like transformer-based LLM models](#model-list). We also provide some images based on some implementations, which can be easily deploy and run through our tool. Inspired by [llama2.c project](https://github.com/karpathy/llama2.c).
+
+## Shortcuts
+[Install The Tool](#install): `pip install llama-gym`
+
+[Manage Repositories](#explore--download-llama-repositories) : `list_repo` `install_repo` `-l <language>`
+
+[Manage Models](#explore--download-models): `list_model` `install_model`
+`-m <model_name>`
+
+[Manage and Run Images](#install--run-images) :`install_img` `run_img`
+
+## Install 
+To install the tool, simply run:
+```bash
+pip install llama-gym
+```
+
+## Explore & Download Llama Repositories
+!!!GIF required.
+### List Repositories
+To list all Llama Implementations, run:
+```bash
+llama-gym list_repo
+```
+You can also set `-l` to specify the language of the repository, like:
+```bash
+$ llama-gym list_repo -l java
+
+-------------------------------------------------------------------------------------------------------------------------
+
+|    | language   | name                  | url                                                  | author       |
+|---:|:-----------|:----------------------|:-----------------------------------------------------|:-------------|
+|  1 | Java       | llama2.java           | https://github.com/mukel/llama2.java                 | @mukel       |
+|  2 | Java       | llama2.tornadovm.java | https://github.com/mikepapadim/llama2.tornadovm.java | @mikepapadim |
+|  3 | Java       | Jlama                 | https://github.com/tjake/Jlama                       | @tjake       |
+|  4 | Java       | llama2j               | https://github.com/LastBotInc/llama2j                | @lasttero    |
+
+-------------------------------------------------------------------------------------------------------------------------
+```
+
+### Download Repositories
+You can also download those [implementation repositories](#repository-list) through our tool:
+```bash
+llama-gym install_repo
+```
+
+You can also set `-l` to specify a language. 
+Once it runs, it supports to download multiple repositories at once, by input row numbers from the listed table. And if you don't like the default download path, you can also specify your own path to download. 
+
+Repositories are saved and splitted by the language and the author name, you can find them in `<specified download path>/llamaRepos`.
+
+[Back to Shortcuts](#shortcuts)
+
+
+
+### Available Repositories
+
+Originating from [llama2.c project](https://github.com/karpathy/llama2.c) by Andrej Karpathy. 
 
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -67,33 +125,50 @@
 | 39. | Bilingual   | llama2.c-zh              | https://github.com/chenyangMl/llama2.c-zh            | @chenyangMl     |
 
 -------------------------------------------------------------------------------------------------------------------------
+[Back to Shortcuts](#shortcuts)
 
-# How to use:
-![lshep](https://github.com/mikepapadim/llama-shepherd-cli/assets/8652854/a9729886-487a-4f10-a413-09e3d64329b0)
+## Explore & Download Models
+Currently the tool only contains Tinyllamas provided in [llama2.c project](https://github.com/karpathy/llama2.c), and Meta-Llama. More model options will be extended and provided to download.
 
-## List Available Llama Options
-
-To list available llama options, use the following command:
-
+The oprations for listing and downloading models are similar to [repositories](#explore--download-llama-repositories). For list available models, run:
 ```bash
-python3 llamashepherd/main.py list [Optional][LANGUAGE]
+llama-gym list_model
 ```
-Replace [LANGUAGE] with the desired language to filter options. If not specified, all options will be displayed.
-
-## Interactively Install Llama Options
-
-To interactively install llama options, use the following command:
+And for download model:
 ```bash
-python3 llamashepherd/main.py install 
+llama-gym install_model
 ```
-## Initialize TinyLlamas Models
 
-To initialize llama models, use the following command:
-```bash
-python3 llamashepherd/main.py models 
-```
-This command allows you to download and configure the Tokenizer and/or TinyLLama models.
+Similarly, `-m` is optional and can be set to specify the model name you want to show and download. 
 
+
+The tool could also helps you to download the default tokenizer provided in [llama2.c](https://github.com/karpathy/llama2.c).
+
+[Back to Shortcuts](#shortcuts)
+
+### Available Models
+More model options will be extended and provided to download.
+
+-------------------------------------------------------------------------------------------------------------------------
+
+|    | Model       | url                                                                     |
+|---:|:------------|:------------------------------------------------------------------------|
+|  1 | stories15M  | https://huggingface.co/karpathy/tinyllamas  |
+|  2 | stories42M  | https://huggingface.co/karpathy/tinyllamas  |
+|  3 | stories110M | https://huggingface.co/karpathy/tinyllamas |
+|  4 | Meta-Llama  | https://llama.meta.com/llama-downloads/                                 |
+
+-------------------------------------------------------------------------------------------------------------------------
+
+
+**IMPORTANT!** It is lisence protected to download Meta-Llama models, which means you still needs to [apply for a download permission by Meta](https://llama.meta.com/llama-downloads). But once you received the download url from Meta's confirmation email, this tool will automatically grab and run [download.sh](https://github.com/meta-llama/llama?tab=readme-ov-file#download) provided by Meta to help you download Meta-Llama models.
+
+[Back to Shortcuts](#shortcuts)
+
+## Install & Run Images
+### Install Images
+### Run Images
+### Available Images
 
 # License
 This project is licensed under the MIT License - see the LICENSE file for details.

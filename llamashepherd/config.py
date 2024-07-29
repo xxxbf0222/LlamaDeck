@@ -155,8 +155,6 @@ model_options = [
 
     {'Model': 'stories110M', 'url': 'https://huggingface.co/karpathy/tinyllamas/resolve/main/stories110M.bin'},
 
-    {'Model': 'tokenizer', 'url': 'https://github.com/karpathy/llama2.c/raw/master/tokenizer.bin'},
-
     {'Model': 'Meta-Llama', 'url':'https://llama.meta.com/llama-downloads/'}
 ]
 

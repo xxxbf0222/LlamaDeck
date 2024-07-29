@@ -2,17 +2,22 @@
 
 import requests
 import os
+import sys
 import subprocess
 import argparse
 import wget
 import docker
 from tabulate import tabulate
-import config
+from . import config
+from shlex import split as shlexSplit
 
 # Access the 'options' dictionary from the config module
 repos = config.repo_options
 models = config.model_options
-images_url = 'https://registry.hub.docker.com/v2/repositories/bufan0222/ll_implements/tags'
+default_tokenizer_url = "https://github.com/karpathy/llama2.c/raw/master/tokenizer.bin"
+images_url = "https://registry.hub.docker.com/v2/repositories/bufan0222/ll_implements/tags"
+
+default_resources_path = os.path.join(os.path.expanduser('~'),"LlamaGymResources")
 
 def create_table_data(config,constrains=None):
     table_data = [list(config[0].keys())]
@@ -37,6 +42,26 @@ def show_table(table_data):
     print(table)
     print("\n" + "-" * 121 + "\n")
 
+def run_sh(command):
+    """Run a shell command.
+
+    Args:
+        command (str or list): The command to be executed. Can be a string or a list of strings.
+    """
+
+    run_command = ""
+    if type(command) is list:
+        for c in command:
+            run_command += (c + " ")
+    else:
+        run_command = command
+
+    process = subprocess.Popen(run_command, 
+                               stdout=sys.stdout, 
+                               stderr=sys.stdout, 
+                               shell=True)
+    
+    process.wait()
 
 def clone_repository(url, destination):
     """Clone a Git repository.
@@ -52,6 +77,11 @@ def clone_repository(url, destination):
         print(f"Error cloning repository: {e}")
 
 def fetch_remote_image_info():
+    """Fetch image information from bufan0222/ll_implements.
+
+    Returns:
+        list: A list of dictionaries containing image information.
+    """
     
     response = requests.get(images_url)
     data = response.json()  
@@ -80,7 +110,7 @@ def choose_options(max_option_num):
     Args:
         max_option_num (int) :max valid option number.
     Returns:
-        list or None: The selected options into list or None.
+        list or None: The selected options in a list or None if input is 0.
     """
 
     while True:
@@ -119,6 +149,11 @@ def choose_options(max_option_num):
 
 
 def list_repos(language = None):
+    """List repositories implemented in a given language.
+
+    Args:
+        language (str): The programming language to list repositories for.
+    """
 
     if language:
         constrains = {"language":language.lower()}
@@ -129,6 +164,12 @@ def list_repos(language = None):
     show_table(repo_table_data)
 
 def list_models(model_name = None):
+    """List available models to install.
+
+    Args:
+        model_name (str): The name of the model to list.
+    """
+    
 
     if model_name:
         constrains = {"Model":model_name.lower()}
@@ -139,6 +180,11 @@ def list_models(model_name = None):
     show_table(model_table_data)
 
 def list_images(image_tag = None):
+    """List available images.
+
+    Args:
+        image_tag (str): The tag of the image to list.
+    """
     images = fetch_remote_image_info()
 
     if image_tag:
@@ -150,10 +196,11 @@ def list_images(image_tag = None):
     show_table(images_table_data)
 
 def install_repos(default_resources_path,language = None):
-    """Perform interactive actions for choosing and cloning llama options.
+    """Install repositories for a given language.
 
     Args:
-        default_llama_shepherd_path (str): Default path for llama shepherd.
+        path (str): The path where repositories should be installed.
+        language (str): The programming language to list repositories for.
     """
 
     resources_path = (
@@ -185,7 +232,7 @@ def install_repos(default_resources_path,language = None):
         lang, name, url, author = selected_repo[1], selected_repo[2], selected_repo[3], selected_repo[4]
 
         destination = os.path.join(
-            resources_path, "repos", lang, author, name
+            resources_path, "llamaRepos", lang, author, name
         )
 
         print("==>installing repo from row",str(idx))
@@ -196,20 +243,32 @@ def install_repos(default_resources_path,language = None):
             os.makedirs(destination, exist_ok=False)
             clone_repository(url, destination)
             print("Finished. \n")
-        except OSError:
-            print(destination,"already exist.\n")
+        except OSError as e:
+            if e.errno == 17:
+                print(destination,"already exist.\n")
+            else:
+                print(e)
 
     print("All selected repositories installed.")
     
 
 def install_models(default_resources_path,model_name=None):
-    """Initialize llama models based on user input.
+    """Install available models.
 
     Args:
-        default_llama_shepherd_path (str): Default path for llama shepherd.
+        path (str): The path where models should be installed.
+        model_name (str): The name of the model to install.
     """
 
-    destination = os.path.join(default_resources_path,"models")
+    resources_path = (
+        input(f"Enter the destination directory \n(press enter to using default: {default_resources_path}): "
+            ).strip()
+            or default_resources_path
+        )
+    
+    destination = os.path.join(resources_path,"llamaModels")
+    if not os.path.exists(destination):
+        os.mkdir(destination)
 
     if model_name:
         constrains = {"Model":model_name.lower()}
@@ -245,7 +304,6 @@ def install_models(default_resources_path,model_name=None):
         
         """check if model is exist"""
         if not os.path.exists(os.path.join(destination,model_name+".bin")):
-
             download_and_configure_model(model_name,
                                          url,
                                          destination,
@@ -259,11 +317,38 @@ def install_models(default_resources_path,model_name=None):
 
     print("All selected models installed.")
 
+    check_and_install_tokenizer(resources_path)
+
+def check_and_install_tokenizer(resources_path):
+    """Ask user to download default tokenizer if no tokenizer exists.
+
+    Args:
+        default_resources_path (str): specified resources path
+    """
+    default_tokenizer_path = os.path.join(resources_path,"llamaTokenizers")
+
+    if not os.path.exists(default_tokenizer_path):
+        os.mkdir(default_tokenizer_path)
+
+    if not os.path.exists(os.path.join(default_tokenizer_path,"tokenizer.bin")):
+        print("\nNo tokenizer is detected in the default resources directory.")
+        choice = input("Do you want to install the default tokenizer? [y to confirm]")
+        if choice == 'y' or choice == "Y":
+            download_and_configure_model("tokenizer",
+                                         default_tokenizer_url,
+                                         default_tokenizer_path,
+                                         )
+
 def install_images(image_tag = None):
+    """Install images.
+
+    Args:
+        image_tag (str): The tag of the image to install.
+    """
 
     images = fetch_remote_image_info()
     img_repo = "bufan0222/ll_implements"
-    client = client = docker.from_env()
+    client = docker.from_env()
 
     if image_tag:
         constrains = {"Tag":image_tag.lower()}
@@ -299,25 +384,12 @@ def install_images(image_tag = None):
         if img_exist:
             print("Image",selected_row[1],"already exist.\n")
         else:
-            pull_image(selected_tag)
+            run_sh("docker pull "+selected_tag)
                 
 
     print("\n\nAll selected images installed.")
 
 
-def pull_image(tag):
-    client = docker.APIClient()
-
-    print("Request image pull...")
-
-    response = client.pull(tag, stream=True, decode=True)
-
-    for progress in response:
-        status = progress["status"]
-        if status == "Downloading":
-            print(status,progress['progress'],end='\r')
-        else:
-            print(status,end='\r')
 
 def download_and_configure_model(model_name, model_url, destination):
     """Download and configure a llama model.
@@ -343,8 +415,8 @@ def install_meta_llama():
     wget.download("https://raw.githubusercontent.com/meta-llama/llama/main/download.sh",out = ".")
 
     print("\n\n\nMeta LLama is License protected.")
-    print("Please first visit: https://llama.meta.com/llama-downloads/ \nto accept license and get access URL.")
-    print("Then follow instructions below:\n")
+    print("Please first visit: https://llama.meta.com/llama-downloads/ to accept license and get access URL first.")
+    print("Then follow instructions below (root privileges needed to run the download script provided by the meta team):\n")
     
     subprocess.run("sudo chmod 777 ./download.sh",shell=True)
     subprocess.run("./download.sh",shell=True)
@@ -353,42 +425,324 @@ def install_meta_llama():
 
     print("\n")
 
+
+def is_img_supported(tag):
+    """Check if an image supports this tool.
+
+    Args:
+        tag (str): The tag of the image.
+    """
+
+    client = docker.from_env()
+
+    container = client.containers.run(tag, 
+                                      command="sh -c 'test -f cli_run.py && echo llama shepherd supported. || echo not supported.'", 
+                                          remove=True, stdout=True)
+    output = container.decode('utf-8').strip()
+        
+    return "llama shepherd supported." in output
+
+def select_img_to_run():
+    client = docker.from_env()
+    local_img = client.images.list()
+
+    local_img_data = []
+    print("Finding supported images...")
+    for image in local_img:
+
+        try:
+            repo,tag = image.tags[0].split(":")
+        except Exception:
+            continue
+
+        if is_img_supported(image.tags[0]):
+            local_img_data.append({"Installed images":tag,"From repository":repo})
+
+    if len(local_img_data) == 0:
+        print("Please install images before run.")
+        return None
+    
+    print("Select images to run:")
+    local_img_table = create_table_data(local_img_data)
+    show_table(local_img_table)
+
+    all_selected_idx = choose_options(len(local_img_table))
+    if not all_selected_idx:
+        return None
+        
+    selected_img = []
+    print("\n==>Selected Image:")
+    for idx in all_selected_idx:
+        row = local_img_table[idx]
+        selected_tag = row[2]+":"+row[1]
+        selected_img.append(selected_tag)
+        print(selected_tag)
+    
+    return selected_img
+
+def select_model_to_run():
+    model_path = os.path.join(default_resources_path,"llamaModels")
+
+    print(f"\nYou can simply choose installed model from default path: {model_path}")
+    print("or specify the path to your own model.")
+    c = input("Do you want to specify the model path? ['y' to confirm] ")
+    if c == 'y' or c == "Y":
+        model_path = input("Model Path (absolute path needed):")
+        return model_path
+
+    local_models = os.listdir(model_path)
+    if len(local_models) == 0:
+        print("No model found in:",os.path.abspath(model_path))
+        return
+
+    print("Select an installed model to run:")
+
+    local_model_data = []
+    for model in local_models:
+        dest = os.path.abspath(os.path.join(model_path,model))
+        size = str(os.path.getsize(dest)/1024//1024) + " MB"
+        local_model_data.append({"Model":model,"Size":size,"From":dest})
+    local_model_table = create_table_data(local_model_data)
+    show_table(local_model_table)
+
+    while True:
+        all_selected_idx = choose_options(len(local_model_table))
+        if not all_selected_idx:
+            print("Exit run images.")
+            return
+        
+        if len(all_selected_idx) == 1:
+            idx = all_selected_idx[0]
+            selected_model_dest = local_model_table[idx][3]
+            print("\n==> Selected Model:")
+            print(selected_model_dest)
+            return selected_model_dest
+        else:
+            print("Only one model can be selected at a time!\n")
+
+def ask_run_flags(parser):
+    print("\n==> Set runnning parameters")
+    while True:
+
+        help_str = '''
+            Options:
+            -t <float>  temperature in [0,inf], default 1.0
+            -p <float>  p value in top-p (nucleus) sampling in [0,1] default 0.9
+            -s <int>    random seed, default time(NULL)
+            -n <int>    number of steps to run for, default 256. 0 = max_seq_len
+            -i <string> input prompt
+            -z <string> optional path to custom tokenizer
+            -m <string> mode: generate|chat, default: generate
+            -y <string> (optional) system prompt in chat mode
+
+            Example: -n 256 -i "Once upon a time"
+
+        '''
+
+        print(help_str)
+
+        flag_str = input("Input parameters (leave blank to using default):\n")
+
+        try:
+            namespace = parser.parse_args(shlexSplit(flag_str))
+            return build_run_flags(namespace)
+
+        except argparse.ArgumentError as e:
+            print("Unknown argument.")
+            continue
+        except SystemExit:
+            continue
+
+            
+def build_run_flags(namespace):
+
+    flag_dict = {
+        "temperature": "-t",
+        "p_value": "-p",
+        "seed": "-s",
+        "steps": "-n",
+        "input_prompt": "-i",
+        "tokenizer_path": "-z",
+        "mode": "-m",
+        "system_prompt": "-y"
+    }
+
+    flags = ""
+    print("\n==> Selected run arguments:")
+    print(namespace)
+    for k,v in vars(namespace).items():
+        if v and k != "action":
+            print(f"{k}: {v}")
+
+            if "prompt" in k:
+                v = f"'{v}'"
+            if k in flag_dict:
+                flags += (f"{flag_dict[k]} {v} ")
+
+    return flags
+
+
+def run_images(args,run_flag_parser):
+    """Run images with specified arguments.
+
+    Args:
+        args: The arguments for running images.
+        parser: The parser to handle arguments.
+    """
+    
+
+    if args.image_tag is None:
+        img_to_run = select_img_to_run()
+    else:
+        img_to_run = [args.image_tag]
+    
+    if img_to_run == None:
+        print("Exit run images.")
+    
+    if args.model_path is None:
+        model_path = select_model_to_run()
+    else:
+        model_path = args.model_path
+
+    run_flags = ""
+    for k,v in vars(args).items():
+        if v and k != "action":
+            run_flags = build_run_flags(args)
+            break
+    
+    if run_flags == "":
+        run_flags = ask_run_flags(run_flag_parser)
+    
+    for tag in img_to_run:
+        inside_command = "python3 cli_run.py run /models/model.bin " + run_flags
+        run_img_command = f'''docker run -it --rm -v {model_path}:/models/model.bin {tag} /bin/sh -c "{inside_command}"'''
+        
+        print(f"\n\nRunning {tag}...")
+        print(f"\n##################stdout from {tag} ####################")
+        run_sh(run_img_command)
+        print("#####################################################################\n")
+    
+    print("All images finished.")
+
+
 def main():
     """Main function to handle llama shepherd CLI operations."""
-    default_resources_path = os.path.join(os.getcwd(), "resources")
+
 
     parser = argparse.ArgumentParser(
         description="Llama Shepherd CLI: Manage your llama-related projects.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,  # Show default values in the help menu
     )
-    parser.add_argument(
-        "action",
-        nargs="?",
-        default="--help",  # Set default action to "--help"
-        choices=["list_repo", "install_repo", "list_model", "install_model", 
-                 "list_img","install_img","--help"],
-        help="Action to perform",
-    )
+    subparsers = parser.add_subparsers(dest="action", help="Action to perform")
 
-    parser.add_argument(
-        "--language","-l",
+    list_repo_parser = subparsers.add_parser("list_repo", help="List repositories")
+    list_repo_parser.add_argument(
+        "--language", "-l",
         nargs="?",  # Make language optional
         default=None,
-        help="Specify the language for the repository actions",
+        help="Specify the language of repos to show in table",
     )
 
-    parser.add_argument(
-        "--model_name","-mn",
+    # subparser: install_repo
+    install_repo_parser = subparsers.add_parser("install_repo", help="Install repositories")
+    install_repo_parser.add_argument(
+        "--language", "-l",
         nargs="?",  # Make language optional
         default=None,
-        help="Specify the model name for the model actions",
+        help="Specify the language of repos to install",
     )
 
-    parser.add_argument(
-        "--image_tag","-img",
-        nargs="?",  # Make language optional
+    # subparser: list_model
+    list_model_parser = subparsers.add_parser("list_model", help="List models")
+    list_model_parser.add_argument(
+        "--model_name", "-m",
+        nargs="?",  
+        default=None,
+        help="Specify the model name",
+    )
+
+    # subparser: install_model
+    install_model_parser = subparsers.add_parser("install_model", help="Install models")
+    install_model_parser.add_argument(
+        "--model_name", "-m",
+        nargs="?",  
+        default=None,
+        help="Specify the model name",
+    )
+
+    # subparser: list_img
+    list_img_parser = subparsers.add_parser("list_img", help="List images")
+    list_img_parser.add_argument(
+        "--image_tag", "-i",
+        nargs="?",  
         default=None,
         help="Specify the image tag",
+    )
+
+    # subparser: install_img
+    install_img_parser = subparsers.add_parser("install_img", help="Install images")
+    install_img_parser.add_argument(
+        "--image_tag", "-i",
+        nargs="?",  
+        default=None,
+        help="Specify the image tag",
+    )
+
+    # subparser: run_img
+    run_img_parser = subparsers.add_parser("run_img", help="Run image with specified options")
+    run_img_parser.add_argument(
+        "image_tag",
+        type=str,
+        nargs="?",
+        help="specify image to run",
+    )
+    run_img_parser.add_argument(
+        "model_path",
+        type=str,
+        nargs="?",
+        help="path to the model",
+    )
+
+    run_img_parser.add_argument(
+        "-t", "--temperature",
+        type=float,
+        help="Temperature in [0, inf], default 1.0",
+    )
+    run_img_parser.add_argument(
+        "-p", "--p_value",
+        type=float,
+        help="p value in top-p (nucleus) sampling in [0,1], default 0.9",
+    )
+    run_img_parser.add_argument(
+        "-s", "--seed",
+        type=int,
+        help="Random seed, default time(NULL)",
+    )
+    run_img_parser.add_argument(
+        "-n", "--steps",
+        type=int,
+        help="Number of steps to run for, default 256. 0 = max_seq_len",
+    )
+    run_img_parser.add_argument(
+        "-i", "--input_prompt",
+        type=str,
+        help="Input prompt",
+    )
+    run_img_parser.add_argument(
+        "-z", "--tokenizer_path",
+        type=str,
+        help="Optional path to custom tokenizer",
+    )
+    run_img_parser.add_argument(
+        "-m", "--mode",
+        type=str,
+        choices=["generate", "chat"],
+        help="Mode: generate|chat, default: generate",
+    )
+    run_img_parser.add_argument(
+        "-y", "--system_prompt",
+        type=str,
+        help="(optional) system prompt in chat mode",
     )
 
     args = parser.parse_args()
@@ -396,22 +750,25 @@ def main():
     if args.action == "list_repo":
         list_repos(args.language)
 
-    elif args.action == "list_model":
-        list_models(args.model_name)
-
-    elif args.action == "list_img":
-        list_images(args.image_tag)
-
     elif args.action == "install_repo":
         install_repos(default_resources_path,args.language)
+
+    elif args.action == "list_model":
+        list_models(args.model_name)
 
     elif args.action == "install_model":
         install_models(default_resources_path,args.model_name)
 
+    elif args.action == "list_img":
+        list_images(args.image_tag)
+
     elif args.action == "install_img":
         install_images(args.image_tag)
 
-    elif args.action == "--help":
+    elif args.action == "run_img":
+        run_images(args,run_img_parser)
+
+    else:
         parser.print_help()
 
 
