@@ -1,6 +1,6 @@
 # llama2-shepherd 
 
-**Llama Shepherd** is a command-line tool for quickly managing and experimenting with multiple versions of llama inference implementations. It can help you quickly filter and download [different llama implementations](#repository-list) and [llama2-like transformer-based LLM models](#model-list). We also provide some images based on some implementations, which can be easily deploy and run through our tool. Inspired by [llama2.c project](https://github.com/karpathy/llama2.c).
+**Llama Shepherd** is a command-line tool for quickly managing and experimenting with multiple versions of llama inference implementations. It can help you quickly filter and download [different llama implementations](#available-repositories)) and [llama2-like transformer-based LLM models](#available-models). We also provide [some images](#available-images) based on some implementations, which can be easily deploy and run through our tool. Inspired by [llama2.c project](https://github.com/karpathy/llama2.c).
 
 ## Shortcuts
 [Install The Tool](#install): `pip install llama-gym`
@@ -169,6 +169,21 @@ More model options will be extended and provided to download.
 ### Install Images
 ### Run Images
 ### Available Images
+
+-------------------------------------------------------------------------------------------------------------------------
+
+|    | Tag                 | Size     | Author    | Repository                             |
+|---:|:--------------------|:---------|:----------|:---------------------------------------|
+|  1 | llama2.rs_gaxler    | 331.0 MB | @gaxler   | https://github.com/gaxler/llama2.rs    |
+|  2 | llama2.c_karpathy   | 139.0 MB | @karpathy | https://github.com/karpathy/llama2.c   |
+|  3 | llama2.java_mukel   | 178.0 MB | @mukel    | https://github.com/mukel/llama2.java   |
+|  4 | go-llama2_tmc       | 133.0 MB | @tmc      | https://github.com/tmc/go-llama2       |
+|  5 | llama2.cpp_leloykun | 169.0 MB | @leloykun | https://github.com/leloykun/llama2.cpp |
+
+-------------------------------------------------------------------------------------------------------------------------
+
+[See our image repository](https://hub.docker.com/r/bufan0222/ll_implements/tags)
+
 
 # License
 This project is licensed under the MIT License - see the LICENSE file for details.
