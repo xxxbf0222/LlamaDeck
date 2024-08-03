@@ -19,7 +19,8 @@ pip install llama-gym
 ```
 
 ## Explore & Download Llama Repositories
-!!!GIF required.
+![list repositories](https://github.com/user-attachments/assets/1d0d347f-c79f-4f63-8e09-ae07a8662ebd)
+
 ### List Repositories
 To list all Llama Implementations, run:
 ```bash
@@ -42,6 +43,8 @@ $ llama-gym list_repo -l java
 ```
 
 ### Download Repositories
+![install repositories](https://github.com/user-attachments/assets/dc12703a-a960-4044-8eef-6619fa553569)
+
 You can also download those [implementation repositories](#repository-list) through our tool:
 ```bash
 llama-gym install_repo
