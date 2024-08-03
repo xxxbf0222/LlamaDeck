@@ -19,7 +19,6 @@ pip install llama-gym
 ```
 
 ## Explore & Download Llama Repositories
-![list repositories](https://github.com/user-attachments/assets/1d0d347f-c79f-4f63-8e09-ae07a8662ebd)
 
 ### List Repositories
 To list all Llama Implementations, run:
@@ -27,29 +26,15 @@ To list all Llama Implementations, run:
 llama-gym list_repo
 ```
 You can also set `-l` to specify the language of the repository, like:
-```bash
-$ llama-gym list_repo -l java
-
--------------------------------------------------------------------------------------------------------------------------
-
-|    | language   | name                  | url                                                  | author       |
-|---:|:-----------|:----------------------|:-----------------------------------------------------|:-------------|
-|  1 | Java       | llama2.java           | https://github.com/mukel/llama2.java                 | @mukel       |
-|  2 | Java       | llama2.tornadovm.java | https://github.com/mikepapadim/llama2.tornadovm.java | @mikepapadim |
-|  3 | Java       | Jlama                 | https://github.com/tjake/Jlama                       | @tjake       |
-|  4 | Java       | llama2j               | https://github.com/LastBotInc/llama2j                | @lasttero    |
-
--------------------------------------------------------------------------------------------------------------------------
-```
+![list repositories](https://github.com/user-attachments/assets/1d0d347f-c79f-4f63-8e09-ae07a8662ebd)
 
 ### Download Repositories
-![install repositories](https://github.com/user-attachments/assets/dc12703a-a960-4044-8eef-6619fa553569)
 
 You can also download those [implementation repositories](#repository-list) through our tool:
 ```bash
 llama-gym install_repo
 ```
-
+![install repositories](https://github.com/user-attachments/assets/dc12703a-a960-4044-8eef-6619fa553569)
 You can also set `-l` to specify a language. 
 Once it runs, it supports to download multiple repositories at once, by input row numbers from the listed table. And if you don't like the default download path, you can also specify your own path to download. 
 
