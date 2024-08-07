@@ -154,24 +154,166 @@ More model options will be extended and provided to download.
 [Back to Shortcuts](#shortcuts)
 
 ## Install & Run Images
+In order to quickliy deploying and experimenting with multiple versions of llama inference implementations, we build an image repository consists of some dockerized popular implementations. [See our image repository](https://hub.docker.com/r/bufan0222/ll_implements/tags).
+
+`llama-gym` can access, pull and run these dockerized implementations. When you need to run multiple implementations, or compare the performance differences between implementations, this will greatly save your effort in deploying implementations, configuring many runtime environment, and learning how to infer a certain implementation.
+
+Before trying these functions, make sure **docker** is already installed and running on your device.
+
 ### Install Images
+To list images from our image repository, use:
+```bash
+llama-gym list_img
+```
+And install image:
+```bash
+llama-gym install_img
+```
+
+Both for `list_img` and `run_img` action, an optional flag `-i <image tag>` can be set to check if a specific tag is included. All image tags are named with format `<repository name>_<author>`. (e.g. for Karpathy's [llama2.c](https://github.com/karpathy/llama2.c), the image tag is `llama2.c_karpathy`) 
+
+The process of installing images is mostly the same as installing repositories and models.
+[Back to Shortcuts](#shortcuts)
+
 ### Run Images
+There are 2 ways to run images.
+
+#### 1 Follow the Instructions
+Run:
+`llama-gym run_img`
+
+Simply call `run_img` action and let the tool find resources and helps you set all configs for model inference. After running this, it will automatically check and list installed images that can be run by this tool.
+
+You will be asked to:
+
+**Step 1**. Select one or more images you want to run.
+
+**Step 2**. Select one model, or specify the model path (abs path needed).
+
+**Step 3**. Set inference arguments: `-i`,`-t`,`-p`... (Optional)
+
+*e.g. In **Step 3**, input `-n 256 -i "Once upon a time"`, then all selected images will inference model with `step=256, prompt="Once upon a time"` .*
+
+Then the tool will run all your selected images, with args your set. And you will see stdout from all those running containers (images), with arg status and inference result printed, looks like:
+![Screencast from 2024年08月07日 03时17分20秒](https://github.com/user-attachments/assets/a148dd0c-e4e0-4911-8d7a-d051cbba3bda)
+
+
+[Back to Shortcuts](#shortcuts)
+#### Run Image in Single Command
+A faster way to run a specific image is to call `run_img` action with specified `image_tag` and `model_path`, followed by inference args if needed.
+```bash
+llama-gym run_img <image_tag> <model_path> <other args (optional)>
+```
+For example, if I want to:
+1. Inference the model: `/home/bufan/LlamaGymResources/llamaModels/stories15M.bin`
+2. run [llama2.java](https://github.com/mukel/llama2.java) inside image with tag 'llama2.java_mukel'
+3. 128 steps and prompt "Once upon a time"
+
+Then the command is:
+```bash
+llama-gym run_img llama2.java_mukel \
+/home/bufan/LlamaGymResources/llamaModels/stories15M.bin \
+-n 128 -i "Once opon a time"
+```
+Result:
+```bash
+$ llama-gym run_img llama2.java_mukel /home/bufan/LlamaGymResources/llamaModels/stories15M.bin  -n 128 -i "Once opon a time"
+
+==> Selected run arguments:
+image_tag: llama2.java_mukel
+model_path: /home/bufan/LlamaGymResources/llamaModels/stories15M.bin
+steps: 128
+input_prompt: Once opon a time
+
+
+Running llama2.java_mukel...
+
+################## stdout from llama2.java_mukel ####################
+
+==>Supported args:
+tokenizer
+prompt
+chat_init_prompt
+mode
+temperature
+step
+top-p
+seed
+
+==> Set args:
+prompt = 'Once opon a time'
+step = 128
+
+==> RUN COMMAND: java --enable-preview --add-modules=jdk.incubator.vector Llama2 /models/model.bin  -i 'Once opon a time'    -n 128  
+WARNING: Using incubator modules: jdk.incubator.vector
+Config{dim=288, hidden_dim=768, n_layers=6, n_heads=6, n_kv_heads=6, vocab_size=32000, seq_len=256, shared_weights=true, head_size=48}
+Once opon a time, there was a boy. He liked to throw a ball. Every day, he would go outside and throw the ball with his friends.
+One day, the boy saw something funny. He saw a penny, made of copper and was very happy. He liked the penny so much that he wanted to throw it again.
+He threw the penny and tried to make it go even higher. But, the penny was too lazy to go higher. So, the boy went back to the penny and tried again. He threw it as far as he could.
+But this time
+
+achieved tok/s: 405.750799
+#####################################################################
+
+All images finished.
+```
+
+**IMPORTANT!** Please always give the absolute path when inputing the `<model_path>`: Since the llama model file is always large, instead of copying it into each container and improve IO and memory cost, `llama-gym` choose to mount the model into each running container (image), where absolute path is needed to mount it when starting an image.
+
+[Back to Shortcuts](#shortcuts)
+
+#### More about passing inference arguments ####
+
+Inference args supported by `llama-gym` are the same as [llama2.c](https://github.com/karpathy/llama2.c). Those are:
+
+`-t <float>`  temperature in [0,inf], default 1.0
+
+`-p <float>`  p value in top-p (nucleus) sampling in [0,1] default 0.9
+
+`-s <int>`    random seed, default time(NULL)
+
+`-n <int>`    number of steps to run for, default 256. 0 = max_seq_len
+
+`-i <string>` input prompt
+
+`-z <string>` optional path to custom tokenizer (not implemented yet)
+
+`-m <string>` mode: generate|chat, default: generate
+
+`-y <string>` (optional) system prompt in chat mode
+
+It is noticed that not all implementations supports all these args from [llama2.c](https://github.com/karpathy/llama2.c). And due to the nature of different implementations, different ways/formats are used to pass these args. 
+
+So for each selected image to run, `llama-gym` will automatically detect its supported args and drop out those unsupported. Then it convert args you set into correct format, put it to correct position (in a command to run the implementation) and finally pass them to inplementation inside the image. This operation is done inside each running container.
+
+[Back to Shortcuts](#shortcuts)
+
 ### Available Images
 
 -------------------------------------------------------------------------------------------------------------------------
 
 |    | Tag                 | Size     | Author    | Repository                             |
 |---:|:--------------------|:---------|:----------|:---------------------------------------|
-|  1 | llama2.rs_gaxler    | 331.0 MB | @gaxler   | https://github.com/gaxler/llama2.rs    |
-|  2 | llama2.c_karpathy   | 139.0 MB | @karpathy | https://github.com/karpathy/llama2.c   |
-|  3 | llama2.java_mukel   | 178.0 MB | @mukel    | https://github.com/mukel/llama2.java   |
-|  4 | go-llama2_tmc       | 133.0 MB | @tmc      | https://github.com/tmc/go-llama2       |
-|  5 | llama2.cpp_leloykun | 169.0 MB | @leloykun | https://github.com/leloykun/llama2.cpp |
+|  1 | llama2.zig_cgbur    | 259.0 MB | @cgbur    | https://github.com/cgbur/llama2.zig    |
+|  2 | llama2.cs_trrahul   | 374.0 MB | @trrahul  | https://github.com/trrahul/llama2.cs   |
+|  3 | llama2.py_tairov    | 57.0 MB  | @tairov   | https://github.com/tairov/llama2.py    |
+|  4 | llama2.rs_gaxler    | 331.0 MB | @gaxler   | https://github.com/gaxler/llama2.rs    |
+|  5 | llama2.c_karpathy   | 139.0 MB | @karpathy | https://github.com/karpathy/llama2.c   |
+|  6 | llama2.java_mukel   | 178.0 MB | @mukel    | https://github.com/mukel/llama2.java   |
+|  7 | go-llama2_tmc       | 133.0 MB | @tmc      | https://github.com/tmc/go-llama2       |
+|  8 | llama2.cpp_leloykun | 169.0 MB | @leloykun | https://github.com/leloykun/llama2.cpp |
 
 -------------------------------------------------------------------------------------------------------------------------
 
-[See our image repository](https://hub.docker.com/r/bufan0222/ll_implements/tags)
+More dockerized implementations will be extended.
 
+[See our image repository](https://hub.docker.com/r/bufan0222/ll_implements/tags).
+
+
+# TODO List
+1. Implement customized tokenizer when running images.
+2. Extend more models and build more images.
+3. Try Multi-thread in running images?
 
 # License
 This project is licensed under the MIT License - see the LICENSE file for details.
