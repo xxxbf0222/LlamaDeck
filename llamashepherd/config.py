@@ -1,4 +1,9 @@
 # config.py
+default_tokenizer = "https://github.com/karpathy/llama2.c/raw/master/tokenizer.bin"
+
+image_repo = "https://registry.hub.docker.com/v2/repositories/bufan0222/ll_implements/tags"
+
+user_defined_resources_path = ""
 
 repo_options = [
 

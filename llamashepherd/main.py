@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import requests
 import os
 import sys
@@ -14,10 +13,13 @@ from shlex import split as shlexSplit
 # Access the 'options' dictionary from the config module
 repos = config.repo_options
 models = config.model_options
-default_tokenizer_url = "https://github.com/karpathy/llama2.c/raw/master/tokenizer.bin"
-images_url = "https://registry.hub.docker.com/v2/repositories/bufan0222/ll_implements/tags"
+default_tokenizer_url = config.default_tokenizer
+images_url = config.image_repo
 
-default_resources_path = os.path.join(os.path.expanduser('~'),"LlamaGymResources")
+if config.user_defined_resources_path:
+    default_resources_path = config.user_defined_resources_path
+else:
+    default_resources_path = os.path.join(os.path.expanduser('~'),"LlamaGymResources")
 
 def create_table_data(config,constrains=None):
     table_data = [list(config[0].keys())]
@@ -94,6 +96,7 @@ def fetch_remote_image_info():
         
         row = {
             "Tag": img_data["name"],
+            "Language":get_img_language(repo_name),
             "Size": str(img_data["full_size"]/1024//1024)+" MB",
             "Author":"@"+author,
             "Repository": "https://github.com/"+author+"/"+repo_name,
@@ -179,7 +182,7 @@ def list_models(model_name = None):
         
     show_table(model_table_data)
 
-def list_images(image_tag = None):
+def list_images(image_tag = None,language = None):
     """List available images.
 
     Args:
@@ -187,8 +190,13 @@ def list_images(image_tag = None):
     """
     images = fetch_remote_image_info()
 
-    if image_tag:
-        constrains = {"Tag":image_tag.lower()}
+    constrains = {}
+    if image_tag != None:
+        constrains["Tag"] = image_tag.lower()
+    if language != None:
+        constrains["Language"] = language.lower()
+    
+    if len(constrains) != 0:
         images_table_data = create_table_data(images,constrains)
     else:
         images_table_data = create_table_data(images)
@@ -339,7 +347,7 @@ def check_and_install_tokenizer(resources_path):
                                          default_tokenizer_path,
                                          )
 
-def install_images(image_tag = None):
+def install_images(image_tag = None,language = None):
     """Install images.
 
     Args:
@@ -350,8 +358,13 @@ def install_images(image_tag = None):
     img_repo = "bufan0222/ll_implements"
     client = docker.from_env()
 
-    if image_tag:
-        constrains = {"Tag":image_tag.lower()}
+    constrains = {}
+    if image_tag != None:
+        constrains["Tag"] = image_tag.lower()
+    if language != None:
+        constrains["Language"] = language.lower()
+    
+    if len(constrains) != 0:
         images_table_data = create_table_data(images,constrains)
     else:
         images_table_data = create_table_data(images)
@@ -442,27 +455,45 @@ def is_img_supported(tag):
         
     return "llama shepherd supported." in output
 
+def get_img_language(repo_name):
+    for repo in repos:
+        if repo["name"] == repo_name:
+            return repo["language"]
+    return "Unknown"
+
 def select_img_to_run():
     client = docker.from_env()
     local_img = client.images.list()
 
     local_img_data = []
-    print("Finding supported images...")
-    for image in local_img:
 
+    total_img = len(local_img)
+    num = 0
+    for image in local_img:
+        num += 1
+        print(f"Finding supported images...[{num}/{total_img}]",end="\r")
         try:
             repo,tag = image.tags[0].split(":")
+
         except Exception:
             continue
 
         if is_img_supported(image.tags[0]):
-            local_img_data.append({"Installed images":tag,"From repository":repo})
+            try:
+                repo_name = tag.split("_")[0]
+                author = tag.split("_")[1]
+                repo_url = "https://github.com/"+author+"/"+repo_name
+            except Exception:
+                repo_url = "Unknown"
+            local_img_data.append({"Installed images":f"{repo}:{tag}",
+                                   "Language":get_img_language(repo_name),
+                                   "Based repository":repo_url})
 
     if len(local_img_data) == 0:
         print("Please install images before run.")
         return None
     
-    print("Select images to run:")
+    print("\n==>Select images to run:")
     local_img_table = create_table_data(local_img_data)
     show_table(local_img_table)
 
@@ -474,7 +505,7 @@ def select_img_to_run():
     print("\n==>Selected Image:")
     for idx in all_selected_idx:
         row = local_img_table[idx]
-        selected_tag = row[2]+":"+row[1]
+        selected_tag = row[1]
         selected_img.append(selected_tag)
         print(selected_tag)
     
@@ -490,10 +521,20 @@ def select_model_to_run():
         model_path = input("Model Path (absolute path needed):")
         return model_path
 
-    local_models = os.listdir(model_path)
+    no_model = False
+    local_models = []
+    try:
+        local_models = os.listdir(model_path)
+    except FileNotFoundError:
+        no_model = True
+    
     if len(local_models) == 0:
-        print("No model found in:",os.path.abspath(model_path))
-        return
+        no_model = True
+    
+    if no_model:
+        print("\nNo model found in:",os.path.abspath(model_path))
+        print("Please install model into default path, or input your own model path.")
+        return None
 
     print("Select an installed model to run:")
 
@@ -508,8 +549,7 @@ def select_model_to_run():
     while True:
         all_selected_idx = choose_options(len(local_model_table))
         if not all_selected_idx:
-            print("Exit run images.")
-            return
+            return None
         
         if len(all_selected_idx) == 1:
             idx = all_selected_idx[0]
@@ -521,7 +561,7 @@ def select_model_to_run():
             print("Only one model can be selected at a time!\n")
 
 def ask_run_flags(parser):
-    print("\n==> Set runnning parameters")
+    print("\n==> Set runnning parameters (Some implementations may not support all of them.)")
     while True:
 
         help_str = '''
@@ -569,7 +609,6 @@ def build_run_flags(namespace):
 
     flags = ""
     print("\n==> Selected run arguments:")
-    print(namespace)
     for k,v in vars(namespace).items():
         if v and k != "action":
             print(f"{k}: {v}")
@@ -598,11 +637,16 @@ def run_images(args,run_flag_parser):
     
     if img_to_run == None:
         print("Exit run images.")
+        return
     
     if args.model_path is None:
         model_path = select_model_to_run()
     else:
         model_path = args.model_path
+    
+    if model_path == None:
+        print("Exit run images.")
+        return
 
     run_flags = ""
     for k,v in vars(args).items():
@@ -678,6 +722,12 @@ def main():
         default=None,
         help="Specify the image tag",
     )
+    list_img_parser.add_argument(
+        "--language", "-l",
+        nargs="?",  
+        default=None,
+        help="Specify the language of the repository inside image",
+    )
 
     # subparser: install_img
     install_img_parser = subparsers.add_parser("install_img", help="Install images")
@@ -686,6 +736,12 @@ def main():
         nargs="?",  
         default=None,
         help="Specify the image tag",
+    )
+    install_img_parser.add_argument(
+        "--language", "-l",
+        nargs="?",  
+        default=None,
+        help="Specify the language of the repository inside image",
     )
 
     # subparser: run_img
@@ -760,10 +816,10 @@ def main():
         install_models(default_resources_path,args.model_name)
 
     elif args.action == "list_img":
-        list_images(args.image_tag)
+        list_images(args.image_tag,args.language)
 
     elif args.action == "install_img":
-        install_images(args.image_tag)
+        install_images(args.image_tag,args.language)
 
     elif args.action == "run_img":
         run_images(args,run_img_parser)
