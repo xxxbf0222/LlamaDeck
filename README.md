@@ -26,7 +26,9 @@ To list all Llama Implementations, run:
 llama-deck list_repo
 ```
 You can also set `-l` to specify the language of the repository, like:
-![list repositories](https://github.com/user-attachments/assets/1d0d347f-c79f-4f63-8e09-ae07a8662ebd)
+![list_repo (1)](https://github.com/user-attachments/assets/c9a987f5-efd1-4b82-a754-fe71022069bc)
+
+
 
 ### Download Repositories
 
@@ -34,7 +36,9 @@ You can also download those [implementation repositories](#repository-list) thro
 ```bash
 llama-deck install_repo
 ```
-![install repositories](https://github.com/user-attachments/assets/dc12703a-a960-4044-8eef-6619fa553569)
+![install_repo (1)](https://github.com/user-attachments/assets/142b14b9-e274-41a4-b97a-2480edc7a1e5)
+
+
 You can also set `-l` to specify a language. 
 Once it runs, it supports to download multiple repositories at once, by input row numbers from the listed table. And if you don't like the default download path, you can also specify your own path to download. 
 
@@ -195,7 +199,8 @@ You will be asked to:
 *e.g. In **Step 3**, input `-n 256 -i "Once upon a time"`, then all selected images will inference model with `step=256, prompt="Once upon a time"` .*
 
 Then the tool will run all your selected images, with args your set. And you will see stdout from all those running containers (images), with arg status and inference result printed, looks like:
-![Screencast from 2024年08月07日 03时17分20秒](https://github.com/user-attachments/assets/a148dd0c-e4e0-4911-8d7a-d051cbba3bda)
+![run_img](https://github.com/user-attachments/assets/b92ba884-c08d-45e2-9236-1381d56baf2b)
+
 
 
 [Back to Shortcuts](#shortcuts)
