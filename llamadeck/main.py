@@ -19,7 +19,7 @@ images_url = config.image_repo
 if config.user_defined_resources_path:
     default_resources_path = config.user_defined_resources_path
 else:
-    default_resources_path = os.path.join(os.path.expanduser('~'),"LlamaGymResources")
+    default_resources_path = os.path.join(os.path.expanduser('~'),"LlamaDeckResources")
 
 def create_table_data(config,constrains=None):
     table_data = [list(config[0].keys())]
@@ -276,7 +276,7 @@ def install_models(default_resources_path,model_name=None):
     
     destination = os.path.join(resources_path,"llamaModels")
     if not os.path.exists(destination):
-        os.mkdir(destination)
+        os.makedirs(destination)
 
     if model_name:
         constrains = {"Model":model_name.lower()}
@@ -426,10 +426,12 @@ def download_and_configure_model(model_name, model_url, destination):
 def install_meta_llama():
     print("==> installing Meta-Llama")
     wget.download("https://raw.githubusercontent.com/meta-llama/llama/main/download.sh",out = ".")
+    file_path = os.getcwd()+"/download.sh"
 
     print("\n\n\nMeta LLama is License protected.")
     print("Please first visit: https://llama.meta.com/llama-downloads/ to accept license and get access URL first.")
-    print("Then follow instructions below (root privileges needed to run the download script provided by the meta team):\n")
+    print(f"Then follow instructions below. \n\n\n (Root privileges needed to run the download script provided by the meta team, or you can stop this process and run it by yourself: {file_path})")
+    print()
     
     subprocess.run("sudo chmod 777 ./download.sh",shell=True)
     subprocess.run("./download.sh",shell=True)
@@ -448,12 +450,16 @@ def is_img_supported(tag):
 
     client = docker.from_env()
 
-    container = client.containers.run(tag, 
-                                      command="sh -c 'test -f cli_run.py && echo llama shepherd supported. || echo not supported.'", 
-                                          remove=True, stdout=True)
-    output = container.decode('utf-8').strip()
-        
-    return "llama shepherd supported." in output
+    try:
+        container = client.containers.run(tag, 
+                                        command="sh -c 'test -f cli_run.py && echo llama-deck supported. || echo not supported.'", 
+                                            remove=True, stdout=True)
+        output = container.decode('utf-8').strip()
+            
+        return "llama-deck supported." in output
+    
+    except Exception:
+        return False
 
 def get_img_language(repo_name):
     for repo in repos:
@@ -670,11 +676,10 @@ def run_images(args,run_flag_parser):
 
 
 def main():
-    """Main function to handle llama shepherd CLI operations."""
-
+    """Main function to handle Llama Deck operations."""
 
     parser = argparse.ArgumentParser(
-        description="Llama Shepherd CLI: Manage your llama-related projects.",
+        description="Llama Deck: Manage and run multi llama implementations.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,  # Show default values in the help menu
     )
     subparsers = parser.add_subparsers(dest="action", help="Action to perform")
