@@ -1,6 +1,8 @@
 # Llama Deck
 
-**Llama Deck** is a command-line tool for quickly managing and experimenting with multiple versions of llama inference implementations. It can help you quickly filter and download [different llama implementations](#available-repositories)) and [llama2-like transformer-based LLM models](#available-models). We also provide [some images](#available-images) based on some implementations, which can be easily deploy and run through our tool. Inspired by [llama2.c project](https://github.com/karpathy/llama2.c).
+**Llama Deck** is a command-line tool for quickly managing and experimenting with multiple versions of llama inference implementations. It can help you quickly filter and download [different llama implementations](#available-repositories) and [llama2-like transformer-based LLM models](#available-models). We also provide [some images](#available-images) based on some implementations, which can be easily deploy and run through our tool. 
+
+Inspired by [llama2.c project](https://github.com/karpathy/llama2.c) and forked from [llama-shepherd-cli](https://github.com/mikepapadim/llama-shepherd-cli).
 
 ## Shortcuts
 [Install The Tool](#install): `pip install llama-deck`
