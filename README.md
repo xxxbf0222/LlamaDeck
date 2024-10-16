@@ -323,4 +323,4 @@ More dockerized implementations will be extended.
 3. Try Multi-thread in running images?
 
 # License
-This project is licensed under the MIT License - see the LICENSE file for details.
+See the LICENSE file for details.
