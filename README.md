@@ -1,6 +1,6 @@
 # Llama Deck
 
-**Llama Deck** is a command-line tool for quickly managing and experimenting with multiple versions of llama inference implementations. It can help you quickly filter and download [different llama implementations](#available-repositories) and [llama2-like transformer-based LLM models](#available-models). We also provide [some images](#available-images) based on some implementations, which can be easily deploy and run through our tool. 
+**Llama Deck** is a command-line tool for quickly managing and experimenting with multiple versions of llama inference implementations. It can help you quickly filter and download [different llama implementations](#available-repositories) and [llama2-like transformer-based LLM models](#available-models). We also provide [some Docker images](#available-images) based on some implementations, which can be easily deploy and run through our tool. 
 
 Inspired by [llama2.c project](https://github.com/karpathy/llama2.c) and forked from [llama-shepherd-cli](https://github.com/mikepapadim/llama-shepherd-cli).
 
@@ -12,7 +12,7 @@ Inspired by [llama2.c project](https://github.com/karpathy/llama2.c) and forked 
 [Manage Models](#explore--download-models): `list_model` `install_model`
 `-m <model_name>`
 
-[Manage and Run Images](#install--run-images) :`install_img` `run_img`
+[Manage and Run Docker Images](#install--run-images) :`install_img` `run_img`
 
 ## Install 
 To install the tool, simply run:
@@ -166,7 +166,7 @@ In order to quickliy deploying and experimenting with multiple versions of llama
 
 Before trying these functions, make sure **docker** is already installed and running on your device.
 
-### Install Images
+### Install DockerImages
 To list images from our image repository, use:
 ```bash
 llama-deck list_img
@@ -181,7 +181,7 @@ Both for `list_img` and `run_img` action, an optional flag `-i <image tag>` can 
 The process of installing images is mostly the same as installing repositories and models.
 [Back to Shortcuts](#shortcuts)
 
-### Run Images
+### Run the Docker Images
 There are 2 ways to run images.
 
 #### 1 Follow the Instructions
@@ -192,7 +192,7 @@ Simply call `run_img` action and let the tool find resources and helps you set a
 
 You will be asked to:
 
-**Step 1**. Select one or more images you want to run.
+**Step 1**. Select one or more Docker images you want to run.
 
 **Step 2**. Select one model, or specify the model path (abs path needed).
 
